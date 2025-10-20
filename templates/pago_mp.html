@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Pago con MercadoPago | Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+.mp-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.mp-summary {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(79, 109, 245, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.mp-payment-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 2rem;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  margin-bottom: 2rem;
+}
+
+.mp-logo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.mp-logo h2 {
+  color: #00b4d8;
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.amount-display {
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.btn-mp {
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.btn-mp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 180, 216, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #9ca3af;
+  border: 2px solid rgba(156, 163, 175, 0.3);
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  margin: 0.5rem;
+}
+
+.btn-secondary:hover {
+  border-color: #9ca3af;
+  color: #e5e7eb;
+  text-decoration: none;
+}
+
+.payment-methods-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.payment-method-info {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 180, 216, 0.2);
+}
+
+.payment-method-info .icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.payment-method-info .title {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .mp-container {
+    padding: 1rem;
+  }
+  
+  .payment-methods-info {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<!-- MercadoPago SDK -->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mp-container">
+  <div class="mp-logo">
+    <h2>💳 MercadoPago</h2>
+    <p style="color: #9ca3af; margin: 0;">Pago seguro y fácil</p>
+  </div>
+
+  <!-- Resumen de compra -->
+  <div class="mp-summary">
+    <h3 style="color: #e5e7eb; margin-bottom: 1rem;">Resumen de tu compra</h3>
+    
+    <div style="color: #9ca3af; margin-bottom: 1rem;">
+      <strong>{{ seleccion.titulo or 'Película seleccionada' }}</strong><br>
+      {{ seleccion.fecha or 'Fecha' }} - {{ seleccion.hora or 'Hora' }}<br>
+      Sala {{ seleccion.sala or '1' }}<br>
+      Asientos: {{ seats|join(', ') if seats else 'Sin asientos' }}
+    </div>
+    
+    {% if combos %}
+    <div style="color: #9ca3af; margin-bottom: 1rem;">
+      <strong>Combos:</strong><br>
+      {% for combo in combos %}
+      • {{ combo.nombre }} - ${{ "%.2f"|format(combo.precio) }}<br>
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div style="border-top: 1px solid rgba(79, 109, 245, 0.3); padding-top: 1rem; margin-top: 1rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span style="color: #9ca3af;">Entradas ({{ seats|length if seats else 0 }}):</span>
+        <span style="color: #e5e7eb;">${{ "%.2f"|format(total_entradas) if total_entradas else "0.00" }}</span>
+      </div>
+      {% if total_combos and total_combos > 0 %}
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span style="color: #9ca3af;">Combos:</span>
+        <span style="color: #e5e7eb;">${{ "%.2f"|format(total_combos) }}</span>
+      </div>
+      {% endif %}
+      <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+        <span style="color: #e5e7eb;">Total a pagar:</span>
+        <span class="amount-display">${{ "%.2f"|format(total) if total else "0.00" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de pago -->
+  <div class="mp-payment-section">
+    <h3 style="color: #e5e7eb; text-align: center; margin-bottom: 1rem;">Métodos de pago disponibles</h3>
+    
+    <div class="payment-methods-info">
+      <div class="payment-method-info">
+        <div class="icon">💳</div>
+        <div class="title">Tarjetas de crédito</div>
+      </div>
+      <div class="payment-method-info">
+        <div class="icon">💰</div>
+        <div class="title">Efectivo</div>
+      </div>
+      <div class="payment-method-info">
+        <div class="icon">🏦</div>
+        <div class="title">Transferencia bancaria</div>
+      </div>
+      <div class="payment-method-info">
+        <div class="icon">📱</div>
+        <div class="title">Billeteras digitales</div>
+      </div>
+    </div>
+
+    <!-- Contenedor del botón de pago de MercadoPago -->
+    <div id="wallet_container"></div>
+    
+    <!-- Botón de respaldo si falla el SDK -->
+    <div id="fallback-button" style="display: none;">
+      <button class="btn-mp" onclick="window.open('https://mercadopago.com', '_blank')">
+        Continuar con MercadoPago
+      </button>
+    </div>
+  </div>
+
+  <!-- Botones de navegación -->
+  <div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('pago.pago') }}" class="btn-secondary">← Volver a opciones de pago</a>
+    <a href="{{ url_for('main.inicio') }}" class="btn-secondary">Ir al inicio</a>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Verificar que tenemos las variables necesarias
+  const publicKey = '{{ public_key }}';
+  const preferenceId = '{{ preference_id }}';
+  
+  if (!publicKey || !preferenceId) {
+    console.error('Faltan credenciales de MercadoPago');
+    document.getElementById('fallback-button').style.display = 'block';
+    return;
+  }
+  
+  try {
+    // Inicializar MercadoPago
+    const mp = new MercadoPago(publicKey, {
+      locale: 'es-AR'
+    });
+    
+    // Crear el wallet de pago
+    mp.checkout({
+      preference: {
+        id: preferenceId
+      },
+      render: {
+        container: '#wallet_container',
+        label: 'Pagar con MercadoPago'
+      },
+      theme: {
+        elementsColor: '#00b4d8',
+        headerColor: '#00b4d8'
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error inicializando MercadoPago:', error);
+    document.getElementById('fallback-button').style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

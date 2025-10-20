@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Cartelera | Cinema3D{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="cartelera-header">
+    <div class="bienvenida-icono">
+      <svg width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="20" y="4" rx="4" fill="#4f6df5"/>
+        <circle cx="14" cy="14" r="4" fill="#fff"/>
+      </svg>
+    </div>
+    <h2 class="bienvenida-titulo">
+      Cartelera <span style="color:#4f6df5">{{ sucursal }}</span>
+    </h2>
+  </div>
+
+  {% if not movies %}
+    <div class="card-central bienvenida-central">
+      <p class="body" style="margin-top:1rem; color:#9ca3af;">
+        No hay películas disponibles por el momento.
+      </p>
+    </div>
+  {% else %}
+  
+  <div class="movies-horizontal-container">
+    {% for m in movies %}
+    <div class="movie-horizontal-card">
+      <div class="movie-poster-section">
+        <img class="movie-poster-horizontal"
+             src="{{ m['poster_url'] }}"
+             alt="Poster {{ m['titulo'] }}"
+             loading="lazy" decoding="async" />
+      </div>
+      
+      <div class="movie-info-section">
+        <div class="movie-header">
+          <h3 class="movie-title">{{ m['titulo'] }}</h3>
+          <p class="movie-meta">{{ m['genero'] }} · {{ m['clasificacion'] }} · {{ m['duracion_min'] }} min</p>
+        </div>
+        
+        <p class="movie-sinopsis">{{ m['sinopsis'] }}</p>
+
+        <div class="movie-funciones">
+          <strong>Funciones disponibles:</strong>
+          <div class="funciones-grid">
+            {% for f in m['funciones'] %}
+              <form method="post" action="{{ url_for('venta.seleccionar_funcion') }}" style="display:inline;">
+                <input type="hidden" name="movie_id" value="{{ m['id'] }}">
+                <input type="hidden" name="funcion_idx" value="{{ loop.index0 }}">
+                <button type="submit" class="btn btn-funcion">
+                  {{ f['fecha'] }} · {{ f['hora'] }} · {{ f['sala'] }}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="cartelera-footer">
+    <a href="{{ url_for('main.bienvenida') }}" class="btn btn-primary">Cambiar sucursal</a>
+  </div>
+</div>
+{% endblock %}

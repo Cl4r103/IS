@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}¡Pago Exitoso! - Cinema App{% endblock %}
+
+{% block extra_head %}
+<style>
+.success-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.success-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 20px;
+    animation: bounceIn 1s ease-in-out;
+}
+
+.transaction-details {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+.status-aprobado {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-pendiente {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-rechazado {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.qr-section {
+    background-color: white;
+    border: 2px solid #28a745;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.btn-action {
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-download {
+    background-color: #007bff;
+    color: white;
+    border: 2px solid #007bff;
+}
+
+.btn-download:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-new-purchase {
+    background-color: #28a745;
+    color: white;
+    border: 2px solid #28a745;
+}
+
+.btn-new-purchase:hover {
+    background-color: #1e7e34;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+}
+
+.btn-outline:hover {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.timeline {
+    margin: 20px 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+.timeline-completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.timeline-pending {
+    background-color: #ffc107;
+    color: white;
+}
+
+.mp-info {
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-action {
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="success-container">
+                        <!-- Ícono de éxito -->
+                        <div class="success-icon">
+                            {% if transaccion.estado == 'APROBADO' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif transaccion.estado == 'PENDIENTE' %}
+                                <i class="fas fa-clock"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                        </div>
+
+                        <!-- Título según estado -->
+                        {% if transaccion.estado == 'APROBADO' %}
+                        <h2 class="text-success mb-3">¡Pago Exitoso!</h2>
+                        <p class="lead">Tu compra ha sido procesada correctamente. ¡Disfruta la función!</p>
+                        {% elif transaccion.estado == 'PENDIENTE' %}
+                        <h2 class="text-warning mb-3">Pago en Proceso</h2>
+                        <p class="lead">Tu pago está siendo procesado. Te notificaremos cuando esté confirmado.</p>
+                        {% else %}
+                        <h2 class="text-info mb-3">Estado del Pago</h2>
+                        <p class="lead">Información sobre tu transacción:</p>
+                        {% endif %}
+
+                        <!-- Detalles de la transacción -->
+                        <div class="transaction-details">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-receipt"></i> Detalles de la Transacción</h5>
+                                <span class="status-badge status-{{ transaccion.estado.lower() }}">
+                                    {{ transaccion.estado }}
+                                </span>
+                            </div>
+
+                            <div class="detail-row">
+                                <strong>ID Transacción:</strong>
+                                <span>#{{ transaccion.id }}</span>
+                            </div>
+
+                            {% if transaccion.external_reference %}
+                            <div class="detail-row">
+                                <strong>Referencia:</strong>
+                                <span>{{ transaccion.external_reference }}</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="detail-row">
+                                <strong>Email:</strong>
+                                <span>{{ transaccion.email_cliente }}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <strong>Película:</strong>
+                                <span>{{ transaccion.pelicula or 'N/A' }}</span>
+                            </div>
+
+                            {% if transaccion.fecha_funcion and transaccion.hora_funcion %}
+                            <div class="detail-row">
+                                <strong>Función:</strong>
+                                <span>{{ transaccion.fecha_funcion }} - {{ transaccion.hora_funcion }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if transaccion.sala %}
+                            <div class="detail-row">
+                                <strong>Sala:</strong>
+                                <span>{{ transaccion.sala }}</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Mostrar asientos si están disponibles -->
+                            {% if transaccion.asientos_json %}
+                            {% set asientos = transaccion.asientos_json | from_json %}
+                            {% if asientos %}
+                            <div class="detail-row">
+                                <strong>Asientos:</strong>
+                                <span>
+                                    {% for asiento in asientos %}
+                                        {{ asiento.numero }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+
+                            <div class="detail-row">
+                                <strong>Total Pagado:</strong>
+                                <span class="text-success"><strong>${{ "%.2f"|format(transaccion.total_pesos) }}</strong></span>
+                            </div>
+
+                            <div class="detail-row">
+                                <strong>Fecha:</strong>
+                                <span>{{ transaccion.created_at.strftime('%d/%m/%Y %H:%M') if transaccion.created_at else 'N/A' }}</span>
+                            </div>
+
+                            <!-- Información de MercadoPago si aplica -->
+                            {% if transaccion.mp_payment_id %}
+                            <div class="mp-info">
+                                <h6><i class="fab fa-cc-visa"></i> Información MercadoPago</h6>
+                                <div class="detail-row">
+                                    <strong>ID Pago MP:</strong>
+                                    <span>{{ transaccion.mp_payment_id }}</span>
+                                </div>
+                                {% if transaccion.mp_status %}
+                                <div class="detail-row">
+                                    <strong>Estado MP:</strong>
+                                    <span>{{ transaccion.mp_status }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Información de tarjeta si aplica -->
+                            {% if transaccion.brand and transaccion.last4 %}
+                            <div class="detail-row">
+                                <strong>Método de Pago:</strong>
+                                <span>{{ transaccion.brand }} ****{{ transaccion.last4 }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Timeline del proceso -->
+                        {% if transaccion.estado == 'APROBADO' %}
+                        <div class="timeline">
+                            <h6><i class="fas fa-list-alt"></i> Proceso Completado</h6>
+                            <div class="timeline-item">
+                                <div class="timeline-icon timeline-completed">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Pago Aprobado</strong><br>
+                                    <small class="text-muted">Tu pago fue procesado exitosamente</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon timeline-completed">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <strong>Comprobante Enviado</strong><br>
+                                    <small class="text-muted">Revisa tu email para el comprobante y QR</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon timeline-completed">
+                                    <i class="fas fa-ticket-alt"></i>
+                                </div>
+                                <div>
+                                    <strong>Asientos Reservados</strong><br>
+                                    <small class="text-muted">Tus asientos están confirmados</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif transaccion.estado == 'PENDIENTE' %}
+                        <div class="timeline">
+                            <h6><i class="fas fa-hourglass-half"></i> En Proceso</h6>
+                            <div class="timeline-item">
+                                <div class="timeline-icon timeline-completed">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Orden Creada</strong><br>
+                                    <small class="text-muted">Tu orden fue registrada correctamente</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon timeline-pending">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <strong>Procesando Pago</strong><br>
+                                    <small class="text-muted">Esperando confirmación del pago</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Sección QR (solo si está aprobado) -->
+                        {% if transaccion.estado == 'APROBADO' %}
+                        <div class="qr-section">
+                            <h5><i class="fas fa-qrcode"></i> Código QR para Ingreso</h5>
+                            <p class="text-muted">Presenta este código en el cine para ingresar</p>
+                            <!-- Aquí iría el QR code, por ahora un placeholder -->
+                            <div class="qr-placeholder" style="width: 150px; height: 150px; border: 2px dashed #ccc; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+                                <span class="text-muted">QR Code</span>
+                            </div>
+                            <small class="text-muted">También recibirás el QR por email</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Botones de acción -->
+                        <div class="action-buttons">
+                            {% if transaccion.estado == 'APROBADO' %}
+                            <a href="{{ url_for('archivos.descargar_comprobante', id=transaccion.id) }}" 
+                               class="btn-action btn-download">
+                                <i class="fas fa-download"></i> Descargar Comprobante
+                            </a>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('main.index') }}" 
+                               class="btn-action btn-new-purchase">
+                                <i class="fas fa-ticket-alt"></i> Nueva Compra
+                            </a>
+                            
+                            <a href="{{ url_for('main.cartelera') }}" 
+                               class="btn-action btn-outline">
+                                <i class="fas fa-film"></i> Ver Cartelera
+                            </a>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="alert alert-info mt-4">
+                            <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
+                            <ul class="mb-0 text-left">
+                                {% if transaccion.estado == 'APROBADO' %}
+                                <li>Llega 15 minutos antes del inicio de la función</li>
+                                <li>Presenta tu QR o comprobante en la entrada</li>
+                                <li>Conserva tu comprobante para cualquier consulta</li>
+                                {% elif transaccion.estado == 'PENDIENTE' %}
+                                <li>Te notificaremos por email cuando se confirme el pago</li>
+                                <li>El proceso puede demorar hasta 24 horas</li>
+                                <li>Tus asientos están temporalmente reservados</li>
+                                {% endif %}
+                                <li>Para consultas, contacta a nuestro soporte</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-actualizar el estado si está pendiente
+{% if transaccion.estado == 'PENDIENTE' %}
+setInterval(function() {
+    fetch('/pago/estado/{{ transaccion.id }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'PENDIENTE') {
+                location.reload();
+            }
+        })
+        .catch(error => console.log('Error verificando estado:', error));
+}, 30000); // Verificar cada 30 segundos
+{% endif %}
+</script>
+{% endblock %}

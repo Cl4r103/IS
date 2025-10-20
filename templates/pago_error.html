@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Error en el Pago - Cinema App{% endblock %}
+
+{% block extra_head %}
+<style>
+.error-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-icon {
+    font-size: 4rem;
+    color: #dc3545;
+    margin-bottom: 20px;
+}
+
+.error-details {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.retry-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 10px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+
+                        <h2 class="text-danger mb-3">Error en el Pago</h2>
+                        <p class="lead">No pudimos procesar tu pago en este momento.</p>
+
+                        {% if error_data %}
+                        <div class="error-details">
+                            <h6><i class="fas fa-info-circle"></i> Detalles del Error</h6>
+                            {% if error_data.payment_id %}
+                            <p><strong>ID de Pago:</strong> {{ error_data.payment_id }}</p>
+                            {% endif %}
+                            {% if error_data.status %}
+                            <p><strong>Estado:</strong> {{ error_data.status }}</p>
+                            {% endif %}
+                            {% if error_data.external_reference %}
+                            <p><strong>Referencia:</strong> {{ error_data.external_reference }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> ¿Qué puedes hacer?</h6>
+                            <ul class="text-left mb-0">
+                                <li>Verificar que tu tarjeta tenga fondos suficientes</li>
+                                <li>Intentar con otro método de pago</li>
+                                <li>Contactar a tu banco si el problema persiste</li>
+                                <li>Intentar nuevamente en unos minutos</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{{ url_for('pago_mp.procesar_pago') }}" class="retry-btn">
+                                <i class="fas fa-redo"></i> Intentar Nuevamente
+                            </a>
+                            <a href="{{ url_for('main.cartelera') }}" class="retry-btn">
+                                <i class="fas fa-film"></i> Ver Cartelera
+                            </a>
+                        </div>
+
+                        <div class="mt-4">
+                            <small class="text-muted">
+                                Si el problema persiste, contacta a nuestro soporte.<br>
+                                <strong>Email:</strong> soporte@cinema.com | <strong>Tel:</strong> (123) 456-7890
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

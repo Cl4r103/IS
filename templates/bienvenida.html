@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Bienvenida | Cinema3D{% endblock %}
+
+{% block content %}
+<div class="page-center">
+  <div class="card">
+    <h1 class="h1">Bienvenido a <span style="color: var(--color-primary)">Cinema3D</span></h1>
+    <h2 class="h2">Seleccioná una sucursal</h2>
+
+    <form method="post" action="{{ url_for('main.set_branch') }}">
+      <div class="form-field">
+        <label for="branch" class="form-label">Sucursal</label>
+        <select id="branch" name="branch" class="select">
+          {% set selected_id = (current_branch_id if current_branch_id is defined
+                                else (current_branch.id if current_branch is defined else None)) %}
+          {% for b in branches %}
+            <option value="{{ b.id }}" {{ 'selected' if selected_id == b.id else '' }}>
+              {{ b.nombre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display:flex; gap: var(--space-2);">
+        <button type="submit" class="btn btn-outline">Seleccionar</button>
+
+        <button type="submit"
+                class="btn btn-outline"
+                formaction="{{ url_for('main.clear_branch') }}">
+          Quitar selección
+        </button>
+      </div>
+    </form>
+
+    {% if current_branch is defined and current_branch %}
+      <p class="body" style="margin-top: var(--space-3);">
+        Sucursal seleccionada: <strong>{{ current_branch.nombre }}</strong>
+      </p>
+    {% elif session.branch is defined and session.branch %}
+      <p class="body" style="margin-top: var(--space-3);">
+        Sucursal seleccionada: <strong>{{ session.branch }}</strong>
+      </p>
+    {% endif %}
+
+    <div style="margin-top: var(--space-4); text-align:center;">
+      <a class="btn btn-primary" href="{{ url_for('venta.cartelera') }}">
+        Ver cartelera
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

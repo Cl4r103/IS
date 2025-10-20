@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Funciones - Admin Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+.admin-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f6df5, #3b56e8);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 109, 245, 0.4);
+  color: #fff;
+  text-decoration: none;
+}
+
+.search-filters {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.filter-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.functions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.function-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.function-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.function-poster {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 3rem;
+}
+
+.function-info {
+  padding: 1.5rem;
+}
+
+.function-title {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.function-details {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.function-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #d1d5db;
+}
+
+.function-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-small {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(1.1);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.status-active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.status-upcoming {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
+.status-past {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #9ca3af;
+  grid-column: 1 / -1;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4f6df5;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  margin: 10% auto;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.modal-content p {
+  color: #9ca3af;
+  margin-bottom: 2rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .functions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1 class="admin-title">Gestionar Funciones</h1>
+      <a href="{{ url_for('admin.nueva_funcion') }}" class="btn-primary">🎬 Nueva Función</a>
+    </div>
+
+    <!-- Alertas -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Resumen estadístico -->
+    <div class="stats-summary">
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.activas }}</div>
+        <div class="stat-label">Activas</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.proximas }}</div>
+        <div class="stat-label">Próximas</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.pasadas }}</div>
+        <div class="stat-label">Pasadas</div>
+      </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="search-filters">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar por título, género o sala...">
+      <select class="filter-select" id="statusFilter">
+        <option value="">Todos los estados</option>
+        <option value="active">Activas</option>
+        <option value="upcoming">Próximas</option>
+        <option value="past">Pasadas</option>
+      </select>
+      <select class="filter-select" id="genreFilter">
+        <option value="">Todos los géneros</option>
+        <option value="Acción">Acción</option>
+        <option value="Drama">Drama</option>
+        <option value="Comedia">Comedia</option>
+        <option value="Ciencia Ficción">Ciencia Ficción</option>
+        <option value="Terror">Terror</option>
+        <option value="Aventura">Aventura</option>
+      </select>
+    </div>
+
+    <!-- Grid de funciones -->
+    <div class="functions-grid" id="functionsGrid">
+      {% if funciones %}
+        {% for funcion in funciones %}
+        <div class="function-card" 
+             data-title="{{ funcion.titulo.lower() }}"
+             data-genre="{{ funcion.genero.lower() }}"
+             data-sala="{{ funcion.sala.lower() }}"
+             data-status="{{ funcion.status }}">
+          
+          <div class="function-poster">
+            {% if funcion.poster %}
+              <img src="{{ funcion.poster }}" alt="{{ funcion.titulo }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+              🎬
+            {% endif %}
+          </div>
+          
+          <div class="function-info">
+            <h3 class="function-title">{{ funcion.titulo }}</h3>
+            <div class="function-details">{{ funcion.genero }} • {{ funcion.duracion }} min</div>
+            
+            <div class="function-meta">
+              <div class="meta-item">
+                <span>📅</span>
+                <span>{{ funcion.fecha }}</span>
+              </div>
+              <div class="meta-item">
+                <span>🕒</span>
+                <span>{{ funcion.hora }}</span>
+              </div>
+              <div class="meta-item">
+                <span>🏛️</span>
+                <span>{{ funcion.sala }}</span>
+              </div>
+              <div class="meta-item">
+                <span>💰</span>
+                <span>${{ funcion.precio }}</span>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="status-badge status-{{ funcion.status }}">
+                {% if funcion.status == 'active' %}Activa
+                {% elif funcion.status == 'upcoming' %}Próxima
+                {% else %}Pasada{% endif %}
+              </span>
+              
+              <div class="function-actions">
+                <a href="{{ url_for('admin.editar_funcion', funcion_id=funcion.id) }}" 
+                   class="btn-small btn-edit" title="Editar">
+                  ✏️
+                </a>
+                <button class="btn-small btn-delete" 
+                        onclick="confirmDelete('{{ funcion.id }}', '{{ funcion.titulo }}')" 
+                        title="Eliminar">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-results">
+          <p>No hay funciones programadas.</p>
+          <a href="{{ url_for('admin.nueva_funcion') }}" class="btn-primary" style="margin-top: 1rem;">
+            🎬 Crear Primera Función
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>Confirmar Eliminación</h3>
+    <p id="deleteMessage">¿Estás seguro de que deseas eliminar esta función?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+      <form id="deleteForm" method="POST" style="display: inline;">
+        <button type="submit" class="btn-confirm">Eliminar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Filtrado en tiempo real
+document.getElementById('searchInput').addEventListener('input', filterFunctions);
+document.getElementById('statusFilter').addEventListener('change', filterFunctions);
+document.getElementById('genreFilter').addEventListener('change', filterFunctions);
+
+function filterFunctions() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  const genreFilter = document.getElementById('genreFilter').value.toLowerCase();
+  const cards = document.querySelectorAll('.function-card');
+  
+  let visibleCount = 0;
+  
+  cards.forEach(card => {
+    const title = card.getAttribute('data-title');
+    const genre = card.getAttribute('data-genre');
+    const sala = card.getAttribute('data-sala');
+    const status = card.getAttribute('data-status');
+    
+    const matchesSearch = title.includes(searchTerm) || 
+                         genre.includes(searchTerm) || 
+                         sala.includes(searchTerm);
+    const matchesStatus = !statusFilter || status === statusFilter;
+    const matchesGenre = !genreFilter || genre.includes(genreFilter);
+    
+    if (matchesSearch && matchesStatus && matchesGenre) {
+      card.style.display = 'block';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  
+  // Mostrar mensaje si no hay resultados
+  const grid = document.getElementById('functionsGrid');
+  let noResultsMsg = grid.querySelector('.no-results');
+  
+  if (visibleCount === 0 && cards.length > 0) {
+    if (!noResultsMsg) {
+      noResultsMsg = document.createElement('div');
+      noResultsMsg.className = 'no-results';
+      noResultsMsg.innerHTML = '<p>No se encontraron funciones que coincidan con los filtros.</p>';
+      grid.appendChild(noResultsMsg);
+    }
+    noResultsMsg.style.display = 'block';
+  } else if (noResultsMsg) {
+    noResultsMsg.style.display = 'none';
+  }
+}
+
+// Modal de confirmación
+function confirmDelete(funcionId, funcionTitle) {
+  document.getElementById('deleteMessage').textContent = 
+    `¿Estás seguro de que deseas eliminar la función "${funcionTitle}"?`;
+  document.getElementById('deleteForm').action = 
+    '/admin/funciones/eliminar/' + funcionId;
+  document.getElementById('deleteModal').style.display = 'block';
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Cerrar modal al hacer click fuera
+window.onclick = function(event) {
+  const modal = document.getElementById('deleteModal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

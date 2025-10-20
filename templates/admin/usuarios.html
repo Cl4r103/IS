@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Usuarios - Admin Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+.admin-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f6df5, #3b56e8);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 109, 245, 0.4);
+  color: #fff;
+  text-decoration: none;
+}
+
+.search-filters {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.filter-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.users-table th,
+.users-table td {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.users-table th {
+  background: rgba(255, 255, 255, 0.05);
+  color: #9ca3af;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.users-table td {
+  color: #e5e7eb;
+}
+
+.users-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.role-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.role-admin {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.role-usuario {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-small {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(1.1);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #9ca3af;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  margin: 10% auto;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.modal-content p {
+  color: #9ca3af;
+  margin-bottom: 2rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1 class="admin-title">Gestionar Usuarios</h1>
+      <a href="{{ url_for('admin.nuevo_usuario') }}" class="btn-primary">➕ Nuevo Usuario</a>
+    </div>
+
+    <!-- Alertas -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Filtros de búsqueda -->
+    <div class="search-filters">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar por email o nombre...">
+      <select class="filter-select" id="roleFilter">
+        <option value="">Todos los roles</option>
+        <option value="admin">Administradores</option>
+        <option value="usuario">Usuarios</option>
+      </select>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    {% if usuarios %}
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Fecha Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody">
+        {% for usuario in usuarios %}
+        <tr data-email="{{ usuario.email.lower() }}" data-nombre="{{ (usuario.nombre or '').lower() }}" data-rol="{{ usuario.rol }}">
+          <td>{{ usuario.id }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.nombre or '-' }}</td>
+          <td>
+            <span class="role-badge role-{{ usuario.rol }}">
+              {{ usuario.rol }}
+            </span>
+          </td>
+          <td>{{ usuario.created_at[:10] if usuario.created_at else '-' }}</td>
+          <td>
+            <div class="actions">
+              <a href="{{ url_for('admin.editar_usuario', user_id=usuario.id) }}" class="btn-small btn-edit" title="Editar">
+                ✏️
+              </a>
+              {% if usuario.id != session.user_id %}
+              <button class="btn-small btn-delete" onclick="confirmDelete('{{ usuario.id }}', '{{ usuario.email }}')" title="Eliminar">
+                🗑️
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="no-results">
+      <p>No hay usuarios registrados.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>Confirmar Eliminación</h3>
+    <p id="deleteMessage">¿Estás seguro de que deseas eliminar este usuario?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+      <form id="deleteForm" method="POST" style="display: inline;">
+        <button type="submit" class="btn-confirm">Eliminar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Filtrado en tiempo real
+document.getElementById('searchInput').addEventListener('input', filterUsers);
+document.getElementById('roleFilter').addEventListener('change', filterUsers);
+
+function filterUsers() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const roleFilter = document.getElementById('roleFilter').value;
+  const rows = document.querySelectorAll('#usersTableBody tr');
+  
+  rows.forEach(row => {
+    const email = row.getAttribute('data-email');
+    const nombre = row.getAttribute('data-nombre');
+    const rol = row.getAttribute('data-rol');
+    
+    const matchesSearch = email.includes(searchTerm) || nombre.includes(searchTerm);
+    const matchesRole = !roleFilter || rol === roleFilter;
+    
+    if (matchesSearch && matchesRole) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+// Modal de confirmación
+function confirmDelete(userId, userEmail) {
+  document.getElementById('deleteMessage').textContent = 
+    `¿Estás seguro de que deseas eliminar el usuario "${userEmail}"?`;
+  document.getElementById('deleteForm').action = 
+    '/admin/usuarios/eliminar/' + userId;
+  document.getElementById('deleteModal').style.display = 'block';
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Cerrar modal al hacer click fuera
+window.onclick = function(event) {
+  const modal = document.getElementById('deleteModal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}
