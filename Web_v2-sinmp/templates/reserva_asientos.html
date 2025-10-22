@@ -1,0 +1,598 @@
+{% extends "base.html" %}
+{% block title %}Reserva de asientos | Cinema3D{% endblock %}
+
+{% block content %}
+<!-- Modal de selección de cantidad -->
+<div id="quantity-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="bienvenida-icono" style="margin: 0 auto 1rem;">
+        <svg width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="20" y="4" rx="4" fill="#4f6df5"/>
+          <circle cx="14" cy="14" r="4" fill="#fff"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">¿Cuántas entradas necesitás?</h2>
+      <div class="movie-info-modal">
+        <p class="movie-name-modal">{{ pelicula }}</p>
+        <p class="movie-session-modal">{{ fecha }} • {{ hora }} • {{ sala }}</p>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="quantity-selector">
+        <label class="quantity-label">Cantidad de entradas:</label>
+        <div class="quantity-controls">
+          <button type="button" class="quantity-btn" id="decrease-btn">-</button>
+          <input type="number" id="ticket-quantity" value="1" min="1" max="{{ max_per_order }}" readonly>
+          <button type="button" class="quantity-btn" id="increase-btn">+</button>
+        </div>
+        <p class="quantity-help">Máximo {{ max_per_order }} entradas por pedido</p>
+      </div>
+
+      <div class="price-preview">
+        <div class="price-item">
+          <span>Precio por entrada:</span>
+          <span class="price-value">${{ "%.0f"|format(precio_entrada) }}</span>
+        </div>
+        <div class="total-preview">
+          <span>Total:</span>
+          <span id="modal-total" class="total-value">${{ "%.0f"|format(precio_entrada) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" id="confirm-quantity">
+        Seleccionar asientos →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Pantalla principal de selección de asientos -->
+<div id="seat-selection-screen" class="seat-screen-disabled">
+  <div class="card-central bienvenida-central" style="max-width: 980px;">
+    <div class="bienvenida-icono">
+      <svg width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="20" y="4" rx="4" fill="#4f6df5"/>
+        <circle cx="14" cy="14" r="4" fill="#fff"/>
+      </svg>
+    </div>
+
+    <h2 class="bienvenida-titulo">Elegí tus asientos</h2>
+    <div class="movie-info" style="text-align: center; margin-bottom: 2rem;">
+      <p style="font-size: 1.1rem; color: #4f6df5; margin: 0.5rem 0;">{{ pelicula }}</p>
+      <p style="color: #9ca3af; margin: 0;">{{ fecha }} • {{ hora }} • {{ sala }}</p>
+    </div>
+
+    <!-- Indicador de cantidad seleccionada -->
+    <div class="quantity-indicator" style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(79, 109, 245, 0.1); border-radius: 12px; border: 1px solid rgba(79, 109, 245, 0.3);">
+      <p style="margin: 0; color: #4f6df5;">
+        Seleccioná <strong id="required-seats">1</strong> asiento(s) - 
+        <span style="color: #9ca3af;">Faltan: <span id="remaining-seats" style="color: #f59e0b; font-weight: 600;">1</span></span>
+      </p>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="seat-legend" style="display: flex; justify-content: center; gap: 2rem; margin: 1.5rem 0; flex-wrap: wrap;">
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 16px; height: 16px; background: #0ea5e9; opacity: 0.6; border-radius: 4px; display: inline-block;"></span>
+        Disponible
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 16px; height: 16px; background: #ef4444; opacity: 0.8; border-radius: 4px; display: inline-block;"></span>
+        Ocupado
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 16px; height: 16px; background: #22c55e; opacity: 0.9; border-radius: 4px; display: inline-block;"></span>
+        Seleccionado
+      </span>
+    </div>
+
+    <!-- Pantalla del cine -->
+    <div style="text-align: center; margin: 2rem 0;">
+      <div style="width: 60%; height: 3px; background: linear-gradient(90deg, transparent, #4f6df5, transparent); margin: 0 auto 0.5rem; border-radius: 1.5px;"></div>
+      <span style="font-size: 0.8rem; color: #9ca3af; letter-spacing: 2px;">PANTALLA</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('venta.reserva_asientos') }}" id="seat-form">
+      <input type="hidden" name="seats" id="seats">
+
+      <!-- Grilla de asientos -->
+      <div id="seat-grid" data-cols="{{ cols }}" data-max="{{ max_per_order }}" style="margin: 2rem 0;">
+        <!-- Números de columnas -->
+        <div class="seat-header" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 12px;">
+          <div style="width: 30px;"></div>
+          {% for c in range(1, cols + 1) %}
+            <div style="width: 40px; text-align: center; font-size: 0.85rem; color: #9ca3af;">{{ c }}</div>
+          {% endfor %}
+          <div style="width: 30px;"></div>
+        </div>
+
+        <!-- Filas de asientos -->
+        {% for r in rows_str %}
+          <div class="seat-row" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; align-items: center;">
+            <div style="width: 30px; text-align: center; font-size: 0.85rem; color: #9ca3af; font-weight: 600;">{{ r }}</div>
+            {% for c in range(1, cols + 1) %}
+              {% set code = r ~ c %}
+              {% if code in reserved %}
+                <button type="button" 
+                        class="seat-btn seat-taken" 
+                        disabled 
+                        title="Asiento {{ code }} ocupado"
+                        style="width: 40px; height: 40px; border-radius: 8px; border: 2px solid #374151; background: #1f2937; color: #6b7280; cursor: not-allowed; font-size: 0.8rem; font-weight: 600;">
+                  {{ c }}
+                </button>
+              {% else %}
+                <button type="button"
+                        class="seat-btn seat-available {% if selected is defined and code in selected %}seat-selected{% endif %}"
+                        data-seat="{{ code }}"
+                        title="Asiento {{ code }}"
+                        aria-pressed="{% if selected is defined and code in selected %}true{% else %}false{% endif %}"
+                        style="width: 40px; height: 40px; border-radius: 8px; border: 2px solid #1f2937; background: #0b1222; color: #e5e7eb; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.15s ease;"
+                        disabled>
+                  {{ c }}
+                </button>
+              {% endif %}
+            {% endfor %}
+            <div style="width: 30px; text-align: center; font-size: 0.85rem; color: #9ca3af; font-weight: 600;">{{ r }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Información de selección y precios -->
+      <div class="selection-summary" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          
+          <div class="seat-count-info">
+            <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+              Asientos seleccionados: <span id="sel-count" style="background: #4f6df5; color: #fff; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; min-width: 24px; display: inline-block; text-align: center;">0</span>
+            </div>
+            
+            <div class="price-info" style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+              <div>
+                <span style="color: #9ca3af;">Precio por entrada:</span>
+                <span style="font-weight: 600; color: #e5e7eb; margin-left: 0.5rem;">${{ "%.0f"|format(precio_entrada) }}</span>
+              </div>
+              <div style="font-size: 1.1rem;">
+                <span style="color: #9ca3af;">Total:</span>
+                <span id="total-price" style="color: #22c55e; font-weight: 700; font-size: 1.25rem; margin-left: 0.5rem;">$0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons" style="display: flex; gap: 1rem;">
+            <button type="button" class="btn btn-outline back-button-style" id="change-quantity">← Cambiar cantidad</button>
+            <button type="submit" class="btn btn-primary back-button-style" id="continue-btn" disabled>Continuar →</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  /* Modal de selección de cantidad */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-content {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8px);
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: #fff;
+  }
+
+  .movie-info-modal {
+    margin-bottom: 2rem;
+  }
+
+  .movie-name-modal {
+    font-size: 1.1rem;
+    color: #4f6df5;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+  }
+
+  .movie-session-modal {
+    color: #9ca3af;
+    margin: 0;
+  }
+
+  .quantity-selector {
+    margin: 2rem 0;
+  }
+
+  .quantity-label {
+    display: block;
+    font-size: 1rem;
+    color: #e5e7eb;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .quantity-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quantity-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #4f6df5;
+    background: #4f6df5;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .quantity-btn:hover {
+    background: #3b56e8;
+    border-color: #3b56e8;
+    transform: scale(1.1);
+  }
+
+  .quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  #ticket-quantity {
+    width: 80px;
+    height: 60px;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    outline: none;
+  }
+
+  .quantity-help {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin: 0.5rem 0 0 0;
+  }
+
+  .price-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+  }
+
+  .price-value {
+    font-weight: 600;
+    color: #e5e7eb;
+  }
+
+  .total-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .total-value {
+    color: #22c55e;
+    font-size: 1.25rem;
+  }
+
+  /* Pantalla de asientos deshabilitada */
+  .seat-screen-disabled {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .seat-screen-enabled {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Asientos */
+  .seat-btn:hover:not(.seat-taken):not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    border-color: #3b82f6 !important;
+  }
+
+  .seat-selected {
+    background: #22c55e !important;
+    border-color: #16a34a !important;
+    color: #032b12 !important;
+    transform: scale(1.05);
+  }
+
+  .seat-available:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Indicador de cantidad requerida */
+  .quantity-indicator {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .modal-content {
+      padding: 1.5rem;
+    }
+    
+    .quantity-controls {
+      gap: 0.5rem;
+    }
+    
+    .quantity-btn {
+      width: 45px;
+      height: 45px;
+      font-size: 1.3rem;
+    }
+    
+    #ticket-quantity {
+      width: 70px;
+      height: 50px;
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    // Elementos del DOM
+    const modal = document.getElementById('quantity-modal');
+    const seatScreen = document.getElementById('seat-selection-screen');
+    const quantityInput = document.getElementById('ticket-quantity');
+    const decreaseBtn = document.getElementById('decrease-btn');
+    const increaseBtn = document.getElementById('increase-btn');
+    const confirmBtn = document.getElementById('confirm-quantity');
+    const changeQuantityBtn = document.getElementById('change-quantity');
+    const modalTotal = document.getElementById('modal-total');
+    
+    const grid = document.getElementById('seat-grid');
+    const maxSel = parseInt(grid.dataset.max || '6', 10);
+    const hidden = document.getElementById('seats');
+    const count = document.getElementById('sel-count');
+    const totalPrice = document.getElementById('total-price');
+    const continueBtn = document.getElementById('continue-btn');
+    const requiredSeats = document.getElementById('required-seats');
+    const remainingSeats = document.getElementById('remaining-seats');
+    
+    const precioEntrada = parseFloat('{{ precio_entrada }}');
+    
+    let targetQuantity = 1;
+    let selectedSeats = [];
+
+    // Funciones del modal de cantidad
+    function updateModalPrice() {
+      const total = parseInt(quantityInput.value) * precioEntrada;
+      modalTotal.textContent = `$${total.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+    }
+
+    function updateQuantityButtons() {
+      const currentValue = parseInt(quantityInput.value);
+      decreaseBtn.disabled = currentValue <= 1;
+      increaseBtn.disabled = currentValue >= maxSel;
+    }
+
+    // Event listeners para el modal
+    decreaseBtn.addEventListener('click', () => {
+      const currentValue = parseInt(quantityInput.value);
+      if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+        updateModalPrice();
+        updateQuantityButtons();
+      }
+    });
+
+    increaseBtn.addEventListener('click', () => {
+      const currentValue = parseInt(quantityInput.value);
+      if (currentValue < maxSel) {
+        quantityInput.value = currentValue + 1;
+        updateModalPrice();
+        updateQuantityButtons();
+      }
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      targetQuantity = parseInt(quantityInput.value);
+      
+      // Ocultar modal y mostrar selección de asientos
+      modal.style.display = 'none';
+      seatScreen.classList.remove('seat-screen-disabled');
+      seatScreen.classList.add('seat-screen-enabled');
+      
+      // Actualizar indicadores
+      requiredSeats.textContent = targetQuantity;
+      remainingSeats.textContent = targetQuantity;
+      
+      // Habilitar asientos disponibles
+      const availableSeats = document.querySelectorAll('.seat-available');
+      availableSeats.forEach(seat => {
+        seat.disabled = false;
+        seat.style.cursor = 'pointer';
+        seat.style.opacity = '1';
+      });
+    });
+
+    changeQuantityBtn.addEventListener('click', () => {
+      // Limpiar selección actual
+      selectedSeats = [];
+      hidden.value = '';
+      updateSeatDisplay();
+      
+      // Deshabilitar asientos
+      const availableSeats = document.querySelectorAll('.seat-available');
+      availableSeats.forEach(seat => {
+        seat.disabled = true;
+        seat.classList.remove('seat-selected');
+        seat.setAttribute('aria-pressed', 'false');
+        seat.style.cursor = 'not-allowed';
+        seat.style.opacity = '0.5';
+      });
+      
+      // Mostrar modal y ocultar selección
+      modal.style.display = 'flex';
+      seatScreen.classList.remove('seat-screen-enabled');
+      seatScreen.classList.add('seat-screen-disabled');
+    });
+
+    // Funciones para la selección de asientos
+    function updateSeatDisplay() {
+      const selectedCount = selectedSeats.length;
+      const remaining = targetQuantity - selectedCount;
+      
+      // Actualizar contadores
+      count.textContent = selectedCount;
+      remainingSeats.textContent = Math.max(0, remaining);
+      
+      // Actualizar total
+      const total = selectedCount * precioEntrada;
+      totalPrice.textContent = `$${total.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+      
+      // Habilitar/deshabilitar botón continuar
+      const canContinue = selectedCount === targetQuantity;
+      continueBtn.disabled = !canContinue;
+      continueBtn.style.opacity = canContinue ? '1' : '0.5';
+      continueBtn.style.cursor = canContinue ? 'pointer' : 'not-allowed';
+      
+      // Cambiar color del indicador de asientos restantes
+      if (remaining === 0) {
+        remainingSeats.style.color = '#22c55e';
+        document.querySelector('.quantity-indicator').style.animation = 'none';
+      } else if (remaining < 0) {
+        remainingSeats.style.color = '#ef4444';
+      } else {
+        remainingSeats.style.color = '#f59e0b';
+        document.querySelector('.quantity-indicator').style.animation = 'pulse 2s infinite';
+      }
+    }
+
+    // Manejar clicks en asientos
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.seat-btn');
+      if (!btn || btn.classList.contains('seat-taken') || btn.disabled) return;
+
+      const code = btn.dataset.seat;
+      const idx = selectedSeats.indexOf(code);
+      
+      if (idx >= 0) {
+        // Deseleccionar
+        selectedSeats.splice(idx, 1);
+        btn.classList.remove('seat-selected');
+        btn.setAttribute('aria-pressed', 'false');
+      } else {
+        // Verificar si ya se alcanzó el límite
+        if (selectedSeats.length >= targetQuantity) {
+          // Permitir selección pero mostrar advertencia visual
+          if (selectedSeats.length >= maxSel) {
+            alert(`No podés seleccionar más de ${maxSel} asientos por pedido.`);
+            return;
+          }
+        }
+        
+        // Seleccionar
+        selectedSeats.push(code);
+        btn.classList.add('seat-selected');
+        btn.setAttribute('aria-pressed', 'true');
+      }
+
+      // Actualizar valor hidden
+      hidden.value = selectedSeats.join(',');
+      updateSeatDisplay();
+    });
+
+    // Validación del formulario
+    document.getElementById('seat-form').addEventListener('submit', (e) => {
+      if (selectedSeats.length !== targetQuantity) {
+        e.preventDefault();
+        if (selectedSeats.length < targetQuantity) {
+          alert(`Debés seleccionar exactamente ${targetQuantity} asiento(s). Te faltan ${targetQuantity - selectedSeats.length}.`);
+        } else {
+          alert(`Seleccionaste demasiados asientos. Debés seleccionar exactamente ${targetQuantity}.`);
+        }
+      }
+    });
+
+    // Inicialización
+    updateModalPrice();
+    updateQuantityButtons();
+    
+    // Verificar si hay asientos previamente seleccionados
+    const initialSelected = Array.from(document.querySelectorAll('.seat-selected'));
+    if (initialSelected.length > 0) {
+      selectedSeats = initialSelected.map(btn => btn.dataset.seat);
+      targetQuantity = selectedSeats.length;
+      quantityInput.value = targetQuantity;
+      
+      // Ir directamente a la selección de asientos
+      modal.style.display = 'none';
+      seatScreen.classList.remove('seat-screen-disabled');
+      seatScreen.classList.add('seat-screen-enabled');
+      
+      requiredSeats.textContent = targetQuantity;
+      hidden.value = selectedSeats.join(',');
+      updateSeatDisplay();
+      
+      const availableSeats = document.querySelectorAll('.seat-available');
+      availableSeats.forEach(seat => {
+        seat.disabled = false;
+        seat.style.cursor = 'pointer';
+        seat.style.opacity = '1';
+      });
+    }
+  })();
+</script>
+{% endblock %}

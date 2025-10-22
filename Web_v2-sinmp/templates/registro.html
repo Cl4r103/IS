@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Registro de usuario - Cine{% endblock %}
+
+{% block head_extras %}
+<style>
+  /* Reset basico */
+  * { box-sizing: border-box; }
+  :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --ok:#16a34a; --err:#ef4444; --primary:#2563eb; }
+  body {
+    /* el body final hereda del layout, pero mantenemos el fondo local para esta vista */
+    background: radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, #0b1020 45%, #05070f 100%), var(--bg);
+    color: var(--text);
+  }
+  .card {
+    width: min(900px, 92vw); background: linear-gradient(180deg, #0d1222, #0a0f1d);
+    border: 1px solid #1f2937; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    padding: 28px 24px 20px; margin: 2rem auto;
+  }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: .2px; }
+  p.sub { margin: 0 0 20px; color: var(--muted); font-size: .95rem; }
+  .msg { margin: 12px 0 18px; padding: 10px 12px; border-radius: 10px; border:1px solid transparent; }
+  .msg.err { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.35); color: #fecaca; }
+  .msg.ok  { background: rgba(22,163,74,.08); border-color: rgba(22,163,74,.35); color: #bbf7d0; }
+
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  .full { grid-column: 1 / -1; }
+  label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: 6px; }
+  input, select {
+    width: 100%; padding: 12px 12px; border-radius: 10px; border: 1px solid #1f2937; background: #0b1222; color: var(--text);
+    outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus, select:focus { border-color: #334155; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+  .row { display:flex; gap:12px; }
+  .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 6px; }
+  button, a.btn {
+    cursor: pointer; border: 1px solid #1f2937; background: linear-gradient(180deg, #1d4ed8, #1e40af);
+    color: white; padding: 12px 16px; border-radius: 10px; font-weight: 600;
+    transition: transform .05s ease, box-shadow .2s ease, filter .2s ease;
+    text-decoration: none; display: inline-block;
+  }
+  button:hover, a.btn:hover { filter: brightness(1.05); box-shadow: 0 10px 24px rgba(37,99,235,.25); }
+  button:active, a.btn:active { transform: translateY(1px); }
+  a.link { color: #93c5fd; text-decoration: none; font-size: .95rem; }
+  small.hint { color: #9ca3af; font-size: .8rem; display:block; margin-top:6px; }
+  /* responsive */
+  @media (max-width: 720px) { form { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>Registro de usuario</h1>
+    <p class="sub">Completa los campos obligatorios marcados con *</p>
+
+    <!-- Mensajes desde Flask -->
+    {% if errores %}
+      <div class="msg err">
+        <ul style="margin:0 0 0 18px;">
+          {% for e in errores %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% if exito %}
+      <div class="msg ok">{{ exito }}</div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <form method="POST" action="{{ url_for('auth.registro') }}" novalidate>
+      <div>
+        <label for="nombre">Nombre *</label>
+        <input id="nombre" name="nombre" type="text" required minlength="2" maxlength="40" autocomplete="given-name"
+               value="{{ data.nombre if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="apellido">Apellido *</label>
+        <input id="apellido" name="apellido" type="text" required minlength="2" maxlength="40" autocomplete="family-name"
+               value="{{ data.apellido if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="tipo_documento">Tipo documento *</label>
+        {% set td = data.tipo_documento if data else '' %}
+        <select id="tipo_documento" name="tipo_documento" required>
+          <option value="">Selecciona...</option>
+          <option value="DNI"  {{ 'selected' if td=='DNI' else '' }}>DNI</option>
+          <option value="CI"   {{ 'selected' if td=='CI'  else '' }}>CI</option>
+          <option value="LE"   {{ 'selected' if td=='LE'  else '' }}>LE</option>
+          <option value="LC"   {{ 'selected' if td=='LC'  else '' }}>LC</option>
+          <option value="PASS" {{ 'selected' if td=='PASS' else '' }}>Pasaporte</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="nro_documento">Nro documento (8 dígitos) *</label>
+        <input id="nro_documento" name="nro_documento" type="text"
+               inputmode="numeric" minlength="8" maxlength="8"
+               pattern="^\d{8}$" required
+               value="{{ data.nro_documento if data else '' }}" />
+        <small class="hint">Solo números, 8 dígitos (ej: 12345678)</small>
+      </div>
+
+      <div>
+        <label for="contrasena">Contraseña *</label>
+        <input id="contrasena" name="contrasena" type="password" required minlength="6" maxlength="64" autocomplete="new-password" value="" />
+        <small class="hint">Mínimo 6 caracteres</small>
+      </div>
+
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" maxlength="80" autocomplete="email"
+               value="{{ data.email if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" name="telefono" type="tel" inputmode="tel" maxlength="20"
+               value="{{ data.telefono if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="codigo_postal">Código postal</label>
+        <input id="codigo_postal" name="codigo_postal" type="text" maxlength="8" pattern="^[A-Za-z0-9]{4,8}$"
+               value="{{ data.codigo_postal if data else '' }}" />
+      </div>
+
+      <div class="full">
+        <label for="direccion">Dirección</label>
+        <input id="direccion" name="direccion" type="text" maxlength="80" autocomplete="address-line1"
+               value="{{ data.direccion if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="ciudad">Ciudad</label>
+        <input id="ciudad" name="ciudad" type="text" maxlength="60" autocomplete="address-level2"
+               value="{{ data.ciudad if data else '' }}" />
+      </div>
+
+      <div>
+        <label for="provincia">Provincia</label>
+        <input id="provincia" name="provincia" type="text" maxlength="60" autocomplete="address-level1"
+               value="{{ data.provincia if data else '' }}" />
+      </div>
+
+      <div class="actions full">
+        <a class="link" href="{{ url_for('venta.cartelera') }}">Volver</a>
+        <button type="submit">Registrar</button>
+      </div>
+
+      {% set mostrar_boton_asientos = mostrar_boton_asientos if mostrar_boton_asientos is defined else (session.seats is defined and session.seats) %}
+      {% if mostrar_boton_asientos %}
+        <div style="margin:28px 0 0 0; text-align:center;" class="full">
+          <a href="{{ url_for('venta.reserva_asientos') }}" class="btn">Ir a reserva de asientos</a>
+        </div>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Validación amigable en navegador (opcional, sin frameworks) -->
+  <script>
+    // Mensajes custom básicos sin romper validaciones nativas
+    const form = document.querySelector("form");
+    form.addEventListener("submit", (e) => {
+      const dni = document.getElementById("nro_documento");
+      if (dni && !/^\d{8}$/.test(dni.value.trim())) {
+        dni.setCustomValidity("El DNI debe tener exactamente 8 dígitos numéricos.");
+      } else {
+        dni.setCustomValidity("");
+      }
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        form.reportValidity();
+      }
+    });
+  </script>
+{% endblock %}

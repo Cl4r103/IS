@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Pago de entradas | Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+/* Estilos para el formulario de pago - consistente con el resto */
+.payment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 2px solid rgba(79, 109, 245, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4f6df5;
+  box-shadow: 0 0 0 2px rgba(79, 109, 245, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.amount-highlight {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.5) !important;
+  color: #22c55e !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  text-align: center;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  grid-column: 1 / -1;
+}
+
+#brand_icon svg { 
+  width: 24px;
+  height: 16px;
+  display: inline-block;
+  background: #fff;
+  border-radius: 3px;
+  padding: 1px;
+  margin-left: 0.4rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .payment-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="card-central bienvenida-central" style="max-width: 900px; width: 100%; padding: 1.5rem;">
+    <div class="bienvenida-icono">
+      <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="20" height="14" y="5" rx="2" fill="#4f6df5"/>
+        <circle cx="10" cy="12" r="2.5" fill="#fff"/>
+      </svg>
+    </div>
+
+    <h2 class="bienvenida-titulo" style="font-size: 1.8rem;">Pago de entradas</h2>
+    <div class="bienvenida-pill">Seguro • Rápido</div>
+    
+    <p style="text-align: center; color: #9ca3af; margin: 1.5rem 0; font-size: 1rem;">
+      Ingresá tus datos para finalizar tu compra. Te enviaremos el comprobante al email.
+    </p>
+
+    <!-- Formulario de pago con estilo consistente -->
+    <form id="form-pago" method="POST" action="{{ url_for('pago.pago') }}" novalidate class="payment-form-grid">
+      
+      <!-- EMAIL -->
+      <div class="form-group full-width">
+        <label for="email" class="form-label">📧 Email</label>
+        <input id="email" name="email" type="email" maxlength="30" autocomplete="email" required
+               value="{{ email|default('') }}" placeholder="tu@email.com" class="form-input">
+      </div>
+
+      <!-- NOMBRE EN TARJETA -->
+      <div class="form-group">
+        <label for="nombre_tarjeta" class="form-label">👤 Nombre en la tarjeta</label>
+        <input id="nombre_tarjeta" name="nombre_tarjeta" type="text"
+               minlength="2" maxlength="26" required autocomplete="cc-name"
+               pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]{2,26}"
+               value="{{ nombre_tarjeta|default('') }}" placeholder="JUAN PEREZ" class="form-input">
+      </div>
+
+      <!-- NÚMERO DE TARJETA -->
+      <div class="form-group">
+        <label for="pan" class="form-label">💳 Número de tarjeta <span id="brand_icon"></span></label>
+        <input id="pan" name="pan" type="text" inputmode="numeric" autocomplete="cc-number"
+               placeholder="1234 5678 9012 3456" pattern="[\d\s]{19}" required class="form-input">
+      </div>
+
+      <!-- CVV -->
+      <div class="form-group">
+        <label for="cvv" class="form-label">🔒 CVV</label>
+        <input id="cvv" name="cvv" type="password" inputmode="numeric"
+               maxlength="3" placeholder="123" required pattern="\d{3}" autocomplete="cc-csc" class="form-input">
+      </div>
+
+      <!-- MES DE VENCIMIENTO -->
+      <div class="form-group">
+        <label for="exp_mes" class="form-label">📅 Mes</label>
+        <input id="exp_mes" name="exp_mes" type="text" inputmode="numeric"
+               maxlength="2" placeholder="12" required pattern="(0[1-9]|1[0-2])" class="form-input">
+      </div>
+
+      <!-- AÑO DE VENCIMIENTO -->
+      <div class="form-group">
+        <label for="exp_anio" class="form-label">📅 Año</label>
+        <input id="exp_anio" name="exp_anio" type="text" inputmode="numeric"
+               maxlength="4" placeholder="2025" required pattern="\d{4}" class="form-input">
+      </div>
+
+      <!-- TOTAL A PAGAR (al final como resumen) -->
+      <div class="form-group">
+        <label for="monto_view" class="form-label">� Total a pagar</label>
+        <input id="monto_view" type="text" required value="${{ "%.0f"|format(total) }}" readonly class="form-input amount-highlight">
+        <input id="monto" name="monto" type="hidden" value="{{ monto_sugerido }}">
+      </div>
+
+      <!-- BOTONES -->
+      <div class="form-actions full-width">
+        <a class="btn btn-outline back-button-style" href="{{ url_for('main.bienvenida') }}">← Volver</a>
+        <button class="btn btn-primary back-button-style" type="submit">Procesar pago →</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ====== MONTO (SOLO LECTURA - CALCULADO AUTOMÁTICAMENTE) ======
+  const montoView = document.getElementById('monto_view');
+  const montoHidden = document.getElementById('monto');
+  
+  // El monto es calculado automáticamente del lado del servidor
+  // y no se permite editar
+  if (montoView) {
+    montoView.addEventListener('focus', function() {
+      this.blur(); // Quitar el foco para evitar edición
+    });
+    
+    montoView.addEventListener('keydown', function(e) {
+      e.preventDefault(); // Prevenir cualquier entrada de teclado
+    });
+  }
+
+  // ====== NOMBRE EN MAYÚSCULAS ======
+  const inputNombre=document.getElementById('nombre_tarjeta');
+  inputNombre.addEventListener('input', ()=>{
+    inputNombre.value=inputNombre.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'').toUpperCase();
+  });
+
+  // ====== CVV ======
+  const cvv=document.getElementById('cvv');
+  cvv.addEventListener('input', ()=>{ cvv.value=cvv.value.replace(/\D/g,'').slice(0,3); });
+
+  const expMes=document.getElementById('exp_mes');
+  const expAnio=document.getElementById('exp_anio');
+  expMes.addEventListener('input', ()=>{
+    expMes.value = expMes.value.replace(/\D/g,'').slice(0,2);
+    if (expMes.value.length===2){
+      let m = parseInt(expMes.value||'0',10);
+      if (m<1) m=1; if (m>12) m=12;
+      expMes.value = String(m).padStart(2,'0');
+      expAnio.focus();
+    }
+  });
+  expAnio.addEventListener('input', ()=>{
+    expAnio.value = expAnio.value.replace(/\D/g,'').slice(0,4);
+    if (expAnio.value.length===4) cvv.focus();
+  });
+
+  // ====== PAN + ICONOS ======
+  const pan=document.getElementById('pan');
+  const brandIcon=document.getElementById('brand_icon');
+
+  const icons={
+    VISA:`<svg viewBox="0 0 48 32"><path fill="#1a1f71" d="M22.3 22.9l2.6-13.8h4.2l-2.6 13.8zM34.5 9.1c-.8-.3-2-.6-3.5-.6-3.9 0-6.6 2-6.6 5 0 2.2 2 3.4 3.6 4.2 1.6.8 2.1 1.3 2.1 2 0 1.1-1.3 1.6-2.5 1.6-1.7 0-2.6-.3-4-.9l-.5-.2-.6 3.3c1 .4 2.8.7 4.7.7 4.4 0 7.2-2 7.2-5.1 0-1.7-1.1-3-3.4-4.2-1.4-.7-2.3-1.2-2.3-2 0-.7.7-1.4 2.3-1.4 1.3 0 2.3.3 3 .6l.4.2.6-3.2M38.7 9.1h-3.2c-1 0-1.8.3-2.2 1.3l-6.2 12.5h4.4l.9-2.3h5.4c.1.6.5 2.3.5 2.3h3.9L38.7 9.1M14.7 9.1l-4.1 9.4-.4-1.9c-1-2.3-2.9-4.8-5.3-6.4L8.5 23h4.3l6.4-13.9h-4.5z"/></svg>`,
+    MASTERCARD:`<svg viewBox="0 0 48 32"><circle cx="19" cy="16" r="10" fill="#eb001b"/><circle cx="29" cy="16" r="10" fill="#f79e1b"/><path d="M24 26a10 10 0 0 0 0-20 10 10 0 0 0 0 20z" fill="#ff5f00"/></svg>`,
+    DESCONOCIDA:``
+  };
+  function detectBrand(d){
+    if(/^4\d{0,15}$/.test(d))return'VISA';
+    if(/^(5[1-5]\d{0,14}|2(2[2-9]\d{0,12}|[3-6]\d{0,13}|7[01]\d{0,12}|720\d{0,12}))$/.test(d))return'MASTERCARD';
+    return'DESCONOCIDA';
+  }
+  pan.addEventListener('input', ()=>{
+    let digits=pan.value.replace(/\D/g,'').slice(0,16);
+    let grouped = digits.replace(/(.{4})/g,'$1 ').trim();
+    pan.value=grouped;
+
+    const brand=detectBrand(digits);
+    brandIcon.innerHTML = brand==='DESCONOCIDA' ? '' : icons[brand];
+  });
+</script>
+{% endblock %}

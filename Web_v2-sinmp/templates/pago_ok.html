@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pago aprobado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:Arial, sans-serif; background:#0b1020; color:#e5e7eb; margin:0; min-height:100vh; display:grid; place-items:center}
+    .card{width:min(900px,92vw); background:#111827; border:1px solid #1f2937; border-radius:14px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,.45)}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:6px 16px}
+    .row div{padding:6px 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .actions{display:flex; gap:12px; margin-top:14px; justify-content:flex-end; flex-wrap:wrap}
+    a.btn{padding:10px 14px; border-radius:10px; border:1px solid #1f2937; background:#0b1222; color:#e5e7eb; text-decoration:none}
+    .section{margin-top:18px; padding-top:16px; border-top:1px solid #1f2937}
+    table{width:100%; border-collapse:collapse; margin-top:8px}
+    th, td{border-bottom:1px solid #1f2937; padding:8px 10px; text-align:left; vertical-align:top}
+    th{font-weight:600; color:#cbd5e1}
+    tfoot td{border-bottom:none; padding-top:12px}
+    .right{text-align:right}
+    .muted{color:#9ca3af}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Pago aprobado</h1>
+
+    <!-- Datos del pago -->
+    <div class="row">
+      <div><strong>Transacción:</strong></div><div class="mono">#{{ trx_id }}</div>
+      <div><strong>Monto pagado:</strong></div><div class="mono">${{ "%.0f"|format(total) }}</div>
+      <div><strong>Tarjeta:</strong></div><div>{{ brand }} **** {{ last4 }}</div>
+      <div><strong>Fecha:</strong></div><div class="mono">{{ fecha }}</div>
+      <div><strong>Autorización:</strong></div><div class="mono">{{ auth_code }}</div>
+      <div><strong>Código de compra:</strong></div><div class="mono">{{ codigo_compra }}</div>
+    </div>
+
+    <!-- Función elegida -->
+    <div class="section">
+      <h2 style="margin:0 0 6px 0; font-size:1.1rem;">Función</h2>
+      <div class="row">
+        <div><strong>Película:</strong></div>
+        <div class="mono">
+          {% if seleccion and seleccion.titulo %}{{ seleccion.titulo }}{% else %}—{% endif %}
+        </div>
+
+        <div><strong>Fecha/Hora:</strong></div>
+        <div class="mono">
+          {% if seleccion and seleccion.fecha and seleccion.hora %}{{ seleccion.fecha }} {{ seleccion.hora }}{% else %}—{% endif %}
+        </div>
+
+        <div><strong>Sala:</strong></div>
+        <div class="mono">
+          {% if seleccion and seleccion.sala %}{{ seleccion.sala }}{% else %}—{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle de la compra -->
+    <div class="section">
+      <h2 style="margin:0 0 6px 0; font-size:1.1rem;">Detalle de la compra</h2>
+
+      <!-- Asientos -->
+      <div class="row">
+        <div><strong>Asientos:</strong></div>
+        <div>
+          {% if seats and seats|length>0 %}
+            <span class="mono">{{ seats|join(', ') }}</span>
+          {% else %}
+            <span class="mono">—</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Combos (detalle ampliado) -->
+      <div style="margin-top:12px">
+        <strong>Combos:</strong>
+        {% if combos_detalle and combos_detalle|length>0 %}
+          <table aria-label="Detalle de combos">
+            <thead>
+              <tr>
+                <th style="width:22%">Combo</th>
+                <th>Descripción</th>
+                <th class="right" style="width:16%">Precio unit.</th>
+                <th class="right" style="width:10%">Cant.</th>
+                <th class="right" style="width:16%">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in combos_detalle %}
+              <tr>
+                <td>{{ c.nombre }}</td>
+                <td class="muted">{{ c.descripcion }}</td>
+                <td class="right mono">$ {{ c.precio }}</td>
+                <td class="right mono">1</td>
+                <td class="right mono">$ {{ c.precio }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="right"><strong>Subtotal combos:</strong></td>
+                <td class="right mono"><strong>$ {{ combos_subtotal }}</strong></td>
+              </tr>
+              <tr>
+                <td colspan="4" class="right">Total pagado:</td>
+                <td class="right mono">${{ "%.0f"|format(total) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        {% else %}
+          <div class="mono">—</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="actions">
+      <a class="btn" href="{{ comprobante_url }}" download="comprobante_{{ trx_id }}.pdf">Descargar comprobante</a>
+      <a class="btn" href="/">Inicio</a>
+    </div>
+  </div>
+</body>
+</html>

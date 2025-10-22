@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Administrativo - Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+.admin-dashboard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.admin-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.admin-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.admin-subtitle {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #4f6df5;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-action {
+  background: linear-gradient(135deg, #4f6df5, #3b56e8);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.admin-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 109, 245, 0.4);
+}
+
+.admin-action h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.admin-action p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.recent-activity {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+}
+
+.recent-activity h3 {
+  color: #fff;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.activity-table th,
+.activity-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-table th {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-table td {
+  color: #e5e7eb;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.status-pending {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-dashboard">
+    <div class="admin-header">
+      <h1 class="admin-title">Panel Administrativo</h1>
+      <p class="admin-subtitle">Gestiona tu cine desde aquí</p>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_usuarios }}</div>
+        <div class="stat-label">Usuarios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_funciones }}</div>
+        <div class="stat-label">Funciones</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_transacciones }}</div>
+        <div class="stat-label">Transacciones</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ "%.0f"|format(stats.ingresos_total) }}</div>
+        <div class="stat-label">Ingresos</div>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="admin-actions">
+      <a href="{{ url_for('admin.usuarios') }}" class="admin-action">
+        <h3>👥 Gestionar Usuarios</h3>
+        <p>Crear, editar y eliminar usuarios</p>
+      </a>
+      <a href="{{ url_for('admin.funciones') }}" class="admin-action">
+        <h3>🎬 Gestionar Funciones</h3>
+        <p>Agregar y modificar funciones de cine</p>
+      </a>
+      <a href="{{ url_for('admin.nuevo_usuario') }}" class="admin-action">
+        <h3>➕ Nuevo Usuario</h3>
+        <p>Crear una cuenta nueva</p>
+      </a>
+      <a href="{{ url_for('admin.nueva_funcion') }}" class="admin-action">
+        <h3>🎭 Nueva Función</h3>
+        <p>Programar una nueva función</p>
+      </a>
+    </div>
+
+    <!-- Actividad reciente -->
+    {% if transacciones %}
+    <div class="recent-activity">
+      <h3>Últimas Transacciones</h3>
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transacciones %}
+          <tr>
+            <td>#{{ t.id }}</td>
+            <td>{{ t.usuario_email }}</td>
+            <td>${{ "%.0f"|format(t.monto_cents / 100) }}</td>
+            <td>{{ t.created_at[:10] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

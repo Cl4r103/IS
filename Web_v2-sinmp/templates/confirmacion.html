@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+{% block title %}Confirmación de compra | Cinema3D{% endblock %}
+
+{% block head_extras %}
+<style>
+.confirmation-main-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.confirmation-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-subtitle {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.confirmation-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detail-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+}
+
+.detail-card h3, .detail-card h4 {
+  color: #fff;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+}
+
+.movie-info {
+  color: #9ca3af;
+  font-size: 0.95rem;
+}
+
+.seats-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.seat-chip {
+  background: linear-gradient(135deg, #4f6df5, #3b56e8);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.combo-item {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.combo-name {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.combo-description {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.combo-price {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.summary-section {
+  background: rgba(79, 109, 245, 0.1);
+  border: 1px solid rgba(79, 109, 245, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: fit-content;
+}
+
+.summary-title {
+  color: #4f6df5;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  color: #e5e7eb;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-total {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #22c55e;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(79, 109, 245, 0.3);
+}
+
+.edit-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #9ca3af;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.edit-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary {
+  background: #22c55e;
+  color: #fff;
+  border: 1px solid #22c55e;
+}
+
+.btn-primary:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+@media (max-width: 768px) {
+  .confirmation-main-card {
+    padding: 1.5rem;
+  }
+  
+  .confirmation-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Estilos para igualar botones con el botón de volver */
+.back-button-style {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  border-radius: 50px !important;
+  gap: 0.5rem !important;
+  transition: all 0.3s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  min-width: 160px !important;
+  height: 48px !important;
+  text-decoration: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.back-button-style:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+.back-button-style:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Asegurar que ambos botones tengan el mismo tamaño */
+.action-buttons .btn {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  border-radius: 50px !important;
+  height: 48px !important;
+  min-width: 160px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.back-button-style:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+.back-button-style:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Responsive para botones de acción */
+@media (max-width: 768px) {
+  .back-button-style,
+  .action-buttons .btn {
+    padding: 0.6rem 1.2rem !important;
+    font-size: 0.8rem !important;
+    min-width: 140px !important;
+    height: 44px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button-style,
+  .action-buttons .btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.75rem !important;
+    min-width: 120px !important;
+    height: 40px !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{# --------- Normalizaciones / fallbacks --------- #}
+{% set sel = seleccion|default({
+  'titulo': pelicula|default('-'),
+  'fecha':  fecha|default('-'),
+  'hora':   hora|default('-'),
+  'sala':   sala|default('-')
+}) %}
+{% set _seats = seats|default([]) %}
+{% set _combos = combos|default([]) %}
+{# Si la vista no envió totales, los calculamos acá como respaldo #}
+{% set _total_entradas = total_entradas|default(0.0) %}
+{% set _total_combos = total_combos|default((_combos|map(attribute='precio')|sum) if _combos else 0.0) %}
+{% set _total = total|default(_total_entradas + _total_combos) %}
+{% set suc = sucursal|default(session.branch if session and session.branch is defined else '-') %}
+
+<div class="container">
+  <div class="confirmation-main-card">
+    <div class="confirmation-header">
+      <h1 class="confirmation-title">Revisá tu compra</h1>
+      <p class="confirmation-subtitle">Sucursal: <strong>{{ suc }}</strong></p>
+    </div>
+
+    <div class="confirmation-grid">
+      <!-- Columna izquierda: detalle -->
+      <div class="detail-section">
+        <div class="detail-card">
+          <h3>{{ sel.titulo }}</h3>
+          <p class="movie-info">
+            {{ sel.fecha }} · {{ sel.hora }} · {{ sel.sala }}
+          </p>
+        </div>
+
+        <div class="detail-card">
+          <h4>Asientos</h4>
+          {% if _seats and _seats|length > 0 %}
+            <div class="seats-container">
+              {% for s in _seats %}
+                <span class="seat-chip">{{ s }}</span>
+              {% endfor %}
+            </div>
+
+            {% if _total_entradas %}
+              <p style="color: #9ca3af; font-size: 0.95rem; margin: 0;">
+                Entradas: <strong>{{ _seats|length }}</strong><br>
+                Subtotal entradas: <span style="color: #22c55e; font-weight: 600;">${{ "%.2f"|format(_total_entradas) }}</span>
+              </p>
+            {% endif %}
+          {% else %}
+            <p style="color: #9ca3af;">Sin asientos seleccionados.</p>
+          {% endif %}
+
+          <a href="{{ url_for('venta.reserva_asientos') }}" class="edit-button">
+            Editar asientos
+          </a>
+        </div>
+
+        {% if _combos and _combos|length > 0 %}
+        <div class="detail-card">
+          <h4>Combos</h4>
+          {% for combo in _combos %}
+            <div class="combo-item">
+              <div class="combo-name">{{ combo.nombre }}</div>
+              <div class="combo-description">{{ combo.descripcion }}</div>
+              <div class="combo-price">${{ "%.2f"|format(combo.precio) }}</div>
+            </div>
+          {% endfor %}
+
+          <a href="{{ url_for('venta.combos') }}" class="edit-button">
+            Editar combos
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Columna derecha: resumen -->
+      <div class="summary-section">
+        <h3 class="summary-title">Resumen</h3>
+        
+        <div class="summary-row">
+          <span>Subtotal entradas</span>
+          <span>${{ "%.2f"|format(_total_entradas) }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Subtotal combos</span>
+          <span>${{ "%.2f"|format(_total_combos) }}</span>
+        </div>
+
+        <div class="summary-row summary-total">
+          <span>TOTAL</span>
+          <span>${{ "%.2f"|format(_total) }}</span>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 0.9rem; margin: 1rem 0 0 0; text-align: center;">
+          Revisá bien la selección antes de continuar al pago.
+        </p>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <a class="btn btn-outline back-button-style" href="{{ url_for('venta.cartelera') }}">
+        Volver
+      </a>
+      <form method="post" action="{{ url_for('pago.pago') }}" style="display: inline;">
+        <button type="submit" class="btn btn-primary back-button-style">
+          Proceder al pago
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

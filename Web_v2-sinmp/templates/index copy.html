@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card-central bienvenida-central">
+  <div class="bienvenida-icono">
+    <svg width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="28" height="20" y="4" rx="4" fill="#4f6df5"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>
+  </div>
+  <h2 class="bienvenida-titulo">Bienvenido a Cinema3D</h2>
+  <form method="post" class="bienvenida-form" autocomplete="off">
+    <label class="bienvenida-label">Selecciona una sucursal:</label>
+    <div class="bienvenida-select-row custom-select-wrapper">
+      <div class="custom-select-container">
+        <select name="sucursal" class="bienvenida-select custom-select">
+          <option value="">Elige una sucursal</option>
+          {% for s in sucursales %}
+            <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+        </select>
+        <span class="custom-select-arrow"></span>
+      </div>
+      <button type="submit" class="btn btn-primary">Seleccionar</button>
+    </div>
+    {% if sucursal_seleccionada %}
+    <div style="width:100%; text-align:left; margin-bottom:1.2rem;">
+      <span style="font-size:1.05rem; color:#b3b3b3;">Sucursal seleccionada:</span>
+      <span style="font-weight:700; color:#fff;">{{ sucursal_seleccionada }}</span>
+      <button name="quitar" value="1" class="btn btn-secondary">Quitar selección</button>
+    </div>
+    {% endif %}
+    <div class="bienvenida-btn-row">
+      <a href="/cartelera" class="btn btn-primary btn-block">Ver cartelera</a>
+      <a href="/registro" class="btn btn-secondary btn-block" style="margin-top:12px;">Registrar usuario</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
